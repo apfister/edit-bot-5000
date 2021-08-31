@@ -6,6 +6,8 @@ import {
   CalciteNotice,
   CalciteRadioGroup,
   CalciteRadioGroupItem,
+  CalciteShell,
+  CalciteSwitch,
   CalciteTooltip,
   CalciteTooltipManager,
 } from "@esri/calcite-components-react";
@@ -22,7 +24,7 @@ import scripts from "./code-samples/scripts.js";
 // import supportedLanguages from "react-syntax-highlighter/dist/esm/languages/hljs/supported-languages";
 
 const StyledNav = styled(Nav)`
-  background-color: #f8f8f8;
+  // background-color: #f8f8f8;
   border-bottom: 1px solid #eaeaea;
 `;
 const StyledNavTitle = styled.h1`
@@ -34,7 +36,7 @@ const StyledNavTitle = styled.h1`
 `;
 
 const StyledCodeRow = styled(Row)`
-  background-color: #f8f8f8;
+  // background-color: #f8f8f8;
   border-radius: 0.25rem;
   box-shadow: rgb(0 0 0 / 10%) 0px 6px 20px -4px,
     rgb(0 0 0 / 8%) 0px 4px 12px -2px;
@@ -56,9 +58,9 @@ const StyledActionPad = styled(CalciteActionPad)`
 
 function App() {
   const codeSampleLanguages = [
-    { name: "python", label: "Python" },
+    { name: "python", label: "ArcGIS API for Python" },
+    { name: "rest", label: "REST API (Python)", modifier: "the" },
     { name: "javascript", label: "JavaScript" },
-    { name: "rest", label: "REST API", modifier: "the" },
     { name: "java", label: "Java" },
     { name: "csharp", label: "C#" },
   ];
@@ -74,36 +76,39 @@ function App() {
   ];
 
   const [currentOp, setCurrentOp] = useState("add");
-  const [currentFormat, setCurrentFormat] = useState("fc");
-  // const [currentMethod, setCurrentMethod] = useState("append");
-  const [activeScript, setActiveScript] = useState(null);
-  const [activeLanguage, setActiveLanguage] = useState("python");
-  // const [currentDeleteMethod, setCurrentDeleteMethod] = useState("delete");
+  const [currentFormat, setCurrentFormat] = useState("json");
+  const [currentScript, setCurrentScript] = useState(null);
+  const [currentLanguage, setCurrentLanguage] = useState("python");
   const [currentAddNumFeatures, setCurrentAddNumFeatures] = useState("lt250");
+  const [c2cIcon, setC2cIcon] = useState("copy-to-clipboard");
+  const [c2cText, setC2cText] = useState("Copy to Clipboard");
+  const [isC2cOpen, setIsC2cOpen] = useState(false);
 
   useEffect(() => {
-    let activeScript = null;
+    let currentScript = null;
     if (
       currentOp === "add" &&
       currentFormat !== "fgdb" &&
-      currentFormat !== "fc"
+      currentFormat !== "fc" &&
+      currentFormat !== "excel" &&
+      currentFormat !== "shp"
     ) {
-      activeScript = `${currentOp}-${currentFormat}-${currentAddNumFeatures}`;
+      currentScript = `${currentOp}-${currentFormat}-${currentAddNumFeatures}`;
     } else if (currentOp === "add") {
-      activeScript = `${currentOp}-${currentFormat}`;
+      currentScript = `${currentOp}-${currentFormat}`;
     } else {
-      activeScript = `${currentOp}-${currentAddNumFeatures}`;
+      currentScript = `${currentOp}-${currentAddNumFeatures}`;
     }
-    activeScript = `${activeScript}-${activeLanguage}`;
-    console.log(activeScript);
-    setActiveScript(scripts[activeScript]);
-  }, [currentOp, currentFormat, currentAddNumFeatures, activeLanguage]);
+    currentScript = `${currentScript}-${currentLanguage}`;
+    console.log(currentScript);
+    setCurrentScript(scripts[currentScript]);
+  }, [currentOp, currentFormat, currentAddNumFeatures, currentLanguage]);
 
   const [currentTheme, setCurrentTheme] = useState("light");
 
-  // const handleDarkMode = () => {
-  //   setCurrentTheme(currentTheme === "light" ? "dark" : "light");
-  // };
+  const handleDarkMode = () => {
+    setCurrentTheme(currentTheme === "light" ? "dark" : "light");
+  };
 
   const getCurrentTheme = () => {
     return currentTheme === "dark"
@@ -116,7 +121,8 @@ function App() {
       currentOp === "add" &&
       currentFormat !== "fgdb" &&
       currentFormat !== "fc" &&
-      currentFormat !== "excel"
+      currentFormat !== "excel" &&
+      currentFormat !== "shp"
     ) {
       return true;
     }
@@ -138,7 +144,7 @@ function App() {
       }
 
       const third = codeSampleLanguages.filter(
-        (f) => f.name === activeLanguage
+        (f) => f.name === currentLanguage
       )[0];
 
       if (third.modifier) {
@@ -151,227 +157,243 @@ function App() {
   };
 
   return (
-    <Container fluid>
-      <StyledNav>
-        <StyledNavTitle>
-          <CalciteIcon icon="calculator"></CalciteIcon> Edit Bot 5000
-        </StyledNavTitle>
-        {/* <StyledDarkModeLabelContainer layout="inline">
-          <label>Dark mode</label>
-          <CalciteSwitch
-            onCalciteSwitchChange={handleDarkMode}
-            className="float-xl-end"
-          ></CalciteSwitch>
-        </StyledDarkModeLabelContainer> */}
-      </StyledNav>
-      <Container fluid className="mt-3">
-        <Row>
-          <Col className="d-flex align-items-center" xs="4">
-            <CalciteLabel className={getCurrentTheme()}>
-              What would you like to do?
-            </CalciteLabel>
-          </Col>
-          <Col>
-            <CalciteRadioGroup
-              onCalciteRadioGroupChange={(e) => setCurrentOp(e.detail)}
-              scale="l"
-              className={getCurrentTheme()}
-            >
-              <CalciteRadioGroupItem
-                {...(currentOp === "add" ? { checked: true } : {})}
-                value="add"
-              >
-                Add features
-              </CalciteRadioGroupItem>
-              <CalciteRadioGroupItem
-                {...(currentOp === "delete" ? { checked: true } : {})}
-                value="delete"
-              >
-                Delete features
-              </CalciteRadioGroupItem>
-            </CalciteRadioGroup>
-          </Col>
-        </Row>
-
-        <Row className="mt-2">
-          {
-            currentOp === "add" ? (
-              <>
-                <Col className="d-flex align-items-center" xs="4">
-                  <CalciteLabel className={getCurrentTheme()}>
-                    What format is your data in?
-                  </CalciteLabel>
-                </Col>
-                <Col>
-                  <CalciteRadioGroup
-                    onCalciteRadioGroupChange={(e) =>
-                      setCurrentFormat(e.detail)
-                    }
-                    scale="l"
-                    className={getCurrentTheme()}
-                  >
-                    {addFormats.map((format) => {
-                      return (
-                        <CalciteRadioGroupItem
-                          {...(currentFormat === format.name
-                            ? { checked: true }
-                            : {})}
-                          value={format.name}
-                        >
-                          {format.label}
-                        </CalciteRadioGroupItem>
-                      );
-                    })}
-                  </CalciteRadioGroup>
-                </Col>
-              </>
-            ) : null
-            // (
-            //   <>
-            //     <Col className="d-flex align-items-center" xs="4">
-            //       <CalciteLabel className={getCurrentTheme()}>
-            //         Do you want to Delete or Truncate your data?
-            //       </CalciteLabel>
-            //     </Col>
-            //     <Col>
-            //       <CalciteRadioGroup
-            //         onCalciteRadioGroupChange={(e) =>
-            //           setCurrentDeleteMethod(e.detail)
-            //         }
-            //         scale="l"
-            //         className={getCurrentTheme()}
-            //       >
-            //         <CalciteRadioGroupItem
-            //           {...(currentDeleteMethod === "delete"
-            //             ? { checked: true }
-            //             : {})}
-            //           value="delete"
-            //         >
-            //           Delete
-            //         </CalciteRadioGroupItem>
-            //         <CalciteRadioGroupItem
-            //           {...(currentDeleteMethod === "truncate"
-            //             ? { checked: true }
-            //             : {})}
-            //           value="truncate"
-            //         >
-            //           Truncate
-            //         </CalciteRadioGroupItem>
-            //       </CalciteRadioGroup>
-            //     </Col>
-            //   </>
-            // )
-          }
-        </Row>
-
-        {shouldShowLtGtFeatures() && (
-          <Row className="mt-2">
+    <CalciteShell className={`calcite-theme-${currentTheme}`}>
+      <Container fluid>
+        <StyledNav className="align-items-center">
+          <StyledNavTitle>
+            <CalciteIcon icon="calculator"></CalciteIcon> Edit Bot 5000
+          </StyledNavTitle>
+          <CalciteLabel layout="inline">
+            <label>Dark mode</label>
+            <CalciteSwitch
+              onCalciteSwitchChange={handleDarkMode}
+              className="float-xl-end"
+            ></CalciteSwitch>
+          </CalciteLabel>
+        </StyledNav>
+        <Container fluid className="mt-3">
+          <Row>
             <Col className="d-flex align-items-center" xs="4">
               <CalciteLabel className={getCurrentTheme()}>
-                How many features are you going to {currentOp}?
+                What would you like to do?
               </CalciteLabel>
             </Col>
             <Col>
               <CalciteRadioGroup
-                onCalciteRadioGroupChange={(e) =>
-                  setCurrentAddNumFeatures(e.detail)
-                }
+                onCalciteRadioGroupChange={(e) => setCurrentOp(e.detail)}
                 scale="l"
                 className={getCurrentTheme()}
               >
                 <CalciteRadioGroupItem
-                  {...(currentAddNumFeatures === "lt250"
-                    ? { checked: true }
-                    : {})}
-                  value="lt250"
+                  {...(currentOp === "add" ? { checked: true } : {})}
+                  value="add"
                 >
-                  &lt; 250
+                  Add features
                 </CalciteRadioGroupItem>
                 <CalciteRadioGroupItem
-                  {...(currentAddNumFeatures === "gt250"
-                    ? { checked: true }
-                    : {})}
-                  value="gt250"
+                  {...(currentOp === "delete" ? { checked: true } : {})}
+                  value="delete"
                 >
-                  &gt; 250
+                  Delete features
                 </CalciteRadioGroupItem>
               </CalciteRadioGroup>
             </Col>
           </Row>
-        )}
 
-        <StyledCodeRow className="mt-3">
-          <Col>
-            <div style={{ position: "relative" }}>
-              <StyledDropDownContainer>
+          <Row className="mt-2">
+            {
+              currentOp === "add" ? (
+                <>
+                  <Col className="d-flex align-items-center" xs="4">
+                    <CalciteLabel className={getCurrentTheme()}>
+                      What format is your data in?
+                    </CalciteLabel>
+                  </Col>
+                  <Col>
+                    <CalciteRadioGroup
+                      onCalciteRadioGroupChange={(e) =>
+                        setCurrentFormat(e.detail)
+                      }
+                      scale="l"
+                      className={getCurrentTheme()}
+                    >
+                      {addFormats.map((format) => {
+                        return (
+                          <CalciteRadioGroupItem
+                            {...(currentFormat === format.name
+                              ? { checked: true }
+                              : {})}
+                            value={format.name}
+                          >
+                            {format.label}
+                          </CalciteRadioGroupItem>
+                        );
+                      })}
+                    </CalciteRadioGroup>
+                  </Col>
+                </>
+              ) : null
+              // (
+              //   <>
+              //     <Col className="d-flex align-items-center" xs="4">
+              //       <CalciteLabel className={getCurrentTheme()}>
+              //         Do you want to Delete or Truncate your data?
+              //       </CalciteLabel>
+              //     </Col>
+              //     <Col>
+              //       <CalciteRadioGroup
+              //         onCalciteRadioGroupChange={(e) =>
+              //           setCurrentDeleteMethod(e.detail)
+              //         }
+              //         scale="l"
+              //         className={getCurrentTheme()}
+              //       >
+              //         <CalciteRadioGroupItem
+              //           {...(currentDeleteMethod === "delete"
+              //             ? { checked: true }
+              //             : {})}
+              //           value="delete"
+              //         >
+              //           Delete
+              //         </CalciteRadioGroupItem>
+              //         <CalciteRadioGroupItem
+              //           {...(currentDeleteMethod === "truncate"
+              //             ? { checked: true }
+              //             : {})}
+              //           value="truncate"
+              //         >
+              //           Truncate
+              //         </CalciteRadioGroupItem>
+              //       </CalciteRadioGroup>
+              //     </Col>
+              //   </>
+              // )
+            }
+          </Row>
+
+          {shouldShowLtGtFeatures() && (
+            <Row className="mt-2">
+              <Col className="d-flex align-items-center" xs="4">
+                <CalciteLabel className={getCurrentTheme()}>
+                  How many features are you going to {currentOp}?
+                </CalciteLabel>
+              </Col>
+              <Col>
                 <CalciteRadioGroup
-                  onCalciteRadioGroupChange={(e) => setActiveLanguage(e.detail)}
-                  scale="m"
+                  onCalciteRadioGroupChange={(e) =>
+                    setCurrentAddNumFeatures(e.detail)
+                  }
+                  scale="l"
                   className={getCurrentTheme()}
                 >
-                  {codeSampleLanguages.map((lang) => {
-                    return (
-                      <CalciteRadioGroupItem
-                        {...(activeLanguage === lang.name
-                          ? { checked: true }
-                          : {})}
-                        value={lang.name}
-                      >
-                        {lang.label}
-                      </CalciteRadioGroupItem>
-                    );
-                  })}
+                  <CalciteRadioGroupItem
+                    {...(currentAddNumFeatures === "lt250"
+                      ? { checked: true }
+                      : {})}
+                    value="lt250"
+                  >
+                    &lt; 250
+                  </CalciteRadioGroupItem>
+                  <CalciteRadioGroupItem
+                    {...(currentAddNumFeatures === "gt250"
+                      ? { checked: true }
+                      : {})}
+                    value="gt250"
+                  >
+                    &gt; 250
+                  </CalciteRadioGroupItem>
                 </CalciteRadioGroup>
-              </StyledDropDownContainer>
-              <CalciteTooltipManager>
-                <StyledActionPad expandDisabled className={getCurrentTheme()}>
-                  <CopyToClipboard text={activeScript}>
-                    <CalciteButton
-                      id="calciteC2C"
-                      appearance="outline"
-                      color="blue"
-                      scale="m"
-                      iconStart="copy-to-clipboard"
-                    ></CalciteButton>
-                  </CopyToClipboard>
-                </StyledActionPad>
-                <CalciteTooltip
-                  referenceElement="calciteC2C"
-                  placement="bottom"
-                >
-                  Copy to Clipboard
-                </CalciteTooltip>
-              </CalciteTooltipManager>
-            </div>
+              </Col>
+            </Row>
+          )}
 
-            {activeScript ? (
-              <SyntaxHighlighter
-                language="python"
-                style={currentTheme === "light" ? a11yLight : a11yDark}
-                showLineNumbers
-                customStyle={{
-                  lineHeight: "1.09",
-                  //   fontSize: "1em",
-                }}
-                codeTagProps={{
-                  style: {
-                    lineHeight: "inherit",
-                    fontSize: "12px",
-                  },
-                }}
-              >
-                {activeScript}
-              </SyntaxHighlighter>
-            ) : (
-              <CalciteNotice active style={{ height: "100px" }}>
-                <div slot="title">No Code Samples Found</div>
-                <div slot="message">{getNoSamplesFound()}</div>
-              </CalciteNotice>
-            )}
-          </Col>
-        </StyledCodeRow>
+          <StyledCodeRow className="mt-3">
+            <Col>
+              <div style={{ position: "relative" }}>
+                <StyledDropDownContainer>
+                  <CalciteRadioGroup
+                    onCalciteRadioGroupChange={(e) =>
+                      setCurrentLanguage(e.detail)
+                    }
+                    scale="m"
+                    className={getCurrentTheme()}
+                  >
+                    {codeSampleLanguages.map((lang) => {
+                      return (
+                        <CalciteRadioGroupItem
+                          {...(currentLanguage === lang.name
+                            ? { checked: true }
+                            : {})}
+                          value={lang.name}
+                        >
+                          {lang.label}
+                        </CalciteRadioGroupItem>
+                      );
+                    })}
+                  </CalciteRadioGroup>
+                </StyledDropDownContainer>
+                <CalciteTooltipManager>
+                  <StyledActionPad expandDisabled className={getCurrentTheme()}>
+                    <CopyToClipboard text={currentScript}>
+                      <CalciteButton
+                        id="calciteC2C"
+                        appearance="outline"
+                        color="blue"
+                        scale="m"
+                        iconStart={c2cIcon}
+                        onClick={() => {
+                          setC2cIcon("check");
+                          setC2cText("Copied!");
+                          setIsC2cOpen(true);
+
+                          setTimeout(() => {
+                            setC2cIcon("copy-to-clipboard");
+                            setIsC2cOpen(false);
+                            setC2cText("Copy to Clipboard");
+                          }, 2000);
+                        }}
+                      ></CalciteButton>
+                    </CopyToClipboard>
+                  </StyledActionPad>
+                  <CalciteTooltip
+                    referenceElement="calciteC2C"
+                    open={isC2cOpen}
+                    placement="bottom"
+                  >
+                    {c2cText}
+                  </CalciteTooltip>
+                </CalciteTooltipManager>
+              </div>
+
+              {currentScript ? (
+                <SyntaxHighlighter
+                  language={currentLanguage}
+                  style={currentTheme === "light" ? a11yLight : a11yDark}
+                  showLineNumbers
+                  customStyle={{
+                    lineHeight: "1.09",
+                    //   fontSize: "1em",
+                  }}
+                  codeTagProps={{
+                    style: {
+                      lineHeight: "inherit",
+                      fontSize: "12px",
+                    },
+                  }}
+                >
+                  {currentScript}
+                </SyntaxHighlighter>
+              ) : (
+                <CalciteNotice active style={{ height: "100px" }}>
+                  <div slot="title">No Code Samples Found</div>
+                  <div slot="message">{getNoSamplesFound()}</div>
+                </CalciteNotice>
+              )}
+            </Col>
+          </StyledCodeRow>
+        </Container>
       </Container>
-    </Container>
+    </CalciteShell>
   );
 }
 

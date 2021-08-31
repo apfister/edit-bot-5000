@@ -1,4 +1,4 @@
-const addExcelGT250Python = `from arcgis.gis import GIS
+const addExcelPython = `from arcgis.gis import GIS
 from arcgis.features import FeatureLayer
 gis = GIS("home")
 
@@ -17,4 +17,4 @@ source_info = gis.content.analyze(item=excel_item)
 # append the data
 append_res = fl.append(item_id=excel_item.id, upload_format='excel',source_info=source_info, upsert=False)`;
 
-export default addExcelGT250Python;
+export default addExcelPython;
