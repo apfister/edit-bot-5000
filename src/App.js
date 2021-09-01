@@ -57,25 +57,6 @@ const StyledActionPad = styled(CalciteActionPad)`
   top: 10px;
 `;
 
-function useQuery() {
-  let params = new URLSearchParams(useLocation().search);
-  // let p = params.get("operation");
-  // if (p !== "add" && p !== "delete") {
-  //   params.set("operation", "add");
-  // }
-
-  // p = params.get("format");
-  // console.log(p);
-  // if (
-  //   ["json", "geojson", "fc", "excel", "csv", "fgdb", "shp"].indexOf(p) === -1
-  // ) {
-  //   console.log("oops");
-  //   params.set("format", "json");cod
-  // }
-
-  return params;
-}
-
 function App() {
   const codeSampleLanguages = [
     { name: "python", label: "ArcGIS API for Python" },
@@ -131,17 +112,13 @@ function App() {
     ) {
       setCurrentLanguage(checkValue);
     }
-  }, []);
 
-  // const query = useQuery();
-  // useEffect(() => {
-  //   const operation = query.get("operation") || "add";
-  //   const language = query.get("language") || "python";
-  //   const format = query.get("format") || "json";
-  //   const ltgt = query.get("ltgt") || "lt250";
-  //   console.log(operation, language, format, ltgt);
-  //   setCurrentOp(operation);
-  // }, []);
+    check = "ltgt";
+    checkValue = params.get(check);
+    if (checkValue && ["lt250", "gt250"].includes(checkValue)) {
+      setCurrentAddNumFeatures(checkValue);
+    }
+  }, []);
 
   useEffect(() => {
     let currentScript = null;
@@ -164,15 +141,7 @@ function App() {
   }, [currentOp, currentFormat, currentAddNumFeatures, currentLanguage]);
 
   useEffect(() => {
-    console.log(
-      "history!",
-      currentOp,
-      currentFormat,
-      currentAddNumFeatures,
-      currentLanguage
-    );
-
-    var params = new URLSearchParams();
+    let params = new URLSearchParams();
     params.set("op", currentOp);
     params.set("format", currentFormat);
     params.set("language", currentLanguage);
