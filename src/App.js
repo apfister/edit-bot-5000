@@ -19,6 +19,7 @@ import {
 import { Col, Container, Nav, Row } from "react-bootstrap";
 import styled from "styled-components";
 import { useEffect, useState } from "react";
+import { useLocation, useHistory, useParams } from "react-router-dom";
 import CopyToClipboard from "react-copy-to-clipboard";
 import scripts from "./code-samples/scripts.js";
 // import supportedLanguages from "react-syntax-highlighter/dist/esm/languages/hljs/supported-languages";
@@ -56,6 +57,25 @@ const StyledActionPad = styled(CalciteActionPad)`
   top: 10px;
 `;
 
+function useQuery() {
+  let params = new URLSearchParams(useLocation().search);
+  // let p = params.get("operation");
+  // if (p !== "add" && p !== "delete") {
+  //   params.set("operation", "add");
+  // }
+
+  // p = params.get("format");
+  // console.log(p);
+  // if (
+  //   ["json", "geojson", "fc", "excel", "csv", "fgdb", "shp"].indexOf(p) === -1
+  // ) {
+  //   console.log("oops");
+  //   params.set("format", "json");cod
+  // }
+
+  return params;
+}
+
 function App() {
   const codeSampleLanguages = [
     { name: "python", label: "ArcGIS API for Python" },
@@ -84,6 +104,45 @@ function App() {
   const [c2cText, setC2cText] = useState("Copy to Clipboard");
   const [isC2cOpen, setIsC2cOpen] = useState(false);
 
+  const location = useLocation();
+  const history = useHistory();
+
+  useEffect(() => {
+    let params = new URLSearchParams(location.search);
+
+    let check = "op";
+    let checkValue = params.get(check);
+    if (checkValue && ["add", "delete"].includes(checkValue)) {
+      console.log("ya");
+      setCurrentOp(checkValue);
+    }
+
+    check = "format";
+    checkValue = params.get(check);
+    if (checkValue && addFormats.map((f) => f.name).includes(checkValue)) {
+      setCurrentFormat(checkValue);
+    }
+
+    check = "language";
+    checkValue = params.get(check);
+    if (
+      checkValue &&
+      codeSampleLanguages.map((f) => f.name).includes(checkValue)
+    ) {
+      setCurrentLanguage(checkValue);
+    }
+  }, []);
+
+  // const query = useQuery();
+  // useEffect(() => {
+  //   const operation = query.get("operation") || "add";
+  //   const language = query.get("language") || "python";
+  //   const format = query.get("format") || "json";
+  //   const ltgt = query.get("ltgt") || "lt250";
+  //   console.log(operation, language, format, ltgt);
+  //   setCurrentOp(operation);
+  // }, []);
+
   useEffect(() => {
     let currentScript = null;
     if (
@@ -103,6 +162,32 @@ function App() {
     console.log(currentScript);
     setCurrentScript(scripts[currentScript]);
   }, [currentOp, currentFormat, currentAddNumFeatures, currentLanguage]);
+
+  useEffect(() => {
+    console.log(
+      "history!",
+      currentOp,
+      currentFormat,
+      currentAddNumFeatures,
+      currentLanguage
+    );
+
+    var params = new URLSearchParams();
+    params.set("op", currentOp);
+    params.set("format", currentFormat);
+    params.set("language", currentLanguage);
+    params.set("ltgt", currentAddNumFeatures);
+
+    history.push({
+      search: params.toString(),
+    });
+  }, [
+    history,
+    currentOp,
+    currentFormat,
+    currentAddNumFeatures,
+    currentLanguage,
+  ]);
 
   const [currentTheme, setCurrentTheme] = useState("light");
 
@@ -347,8 +432,8 @@ function App() {
                           setIsC2cOpen(true);
 
                           setTimeout(() => {
-                            setC2cIcon("copy-to-clipboard");
                             setIsC2cOpen(false);
+                            setC2cIcon("copy-to-clipboard");
                             setC2cText("Copy to Clipboard");
                           }, 2000);
                         }}
